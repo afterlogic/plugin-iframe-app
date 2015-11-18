@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>IFRAME sample</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+	  <div class="container">
+		  <div class="row">
+			  <div class="col-md-10"><h2>This sample demonstrates how you can pass data to your IFRAME.</h2></div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-8"><h4>Data obtained from IFRAME URL</h4></div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-5">
+				<table class="table table-bordered table-hover">
+					<tbody>
+						<tr>
+							<td>Account ID</td>
+							<td class="userId"></td>
+						</tr>
+						<tr>
+							<td>Account email</td>
+							<td class="userEmail"></td>
+						</tr>
+						<tr>
+							<td>Display name</td>
+							<td class="userName"></td>
+						</tr>
+						<tr>
+							<td>Token</td>
+							<td class="token"></td>
+						</tr>
+						<tr>
+							<td>AuthToken</td>
+							<td class="authToken"></td>
+						</tr>
+					</tbody>
+				</table>
+			  </div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-8"><h5>AuthToken is only needed if you plan to access AfterLogic HTTP API within your IFRAME.</h5></div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-8"><h5>Alternatively, we could pass just Account ID and then get all the user details with AfterLogic HTTP API.</h5></div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-8"><h4>Data obtained via HTTP API for Account ID <span class="userId"></span></h4></div>
+		  </div>
+		  <div class="row">
+			  <div class="col-md-4">
+				<table class="table table-bordered table-hover">
+					<tbody>
+						<tr>
+							<td>Account email</td>
+							<td class="userEmailViaAPI"></td>
+						</tr>
+						<tr>
+							<td>Display name</td>
+							<td class="userNameViaAPI"></td>
+						</tr>
+					</tbody>
+				</table>
+			  </div>
+		  </div>
+	  </div>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		function GetRequestParam (sParamName)
+		{
+			var
+				aParams = [],
+				aGetParams = [],
+				sResult = null
+			;
+
+			if (this.aGetParams === undefined)
+			{
+				aParams = (location.search !== '') ? (location.search.substr(1)).split('&') : [];
+
+				if (aParams.length > 0)
+				{
+					for (var i = 0; i < aParams.length; i++)
+					{
+						var aKeyValues = aParams[i].split('=');
+						aGetParams[aKeyValues[0]] = aKeyValues.length > 1 ? aKeyValues[1] : '';
+					}
+				}
+
+				this.aGetParams = aGetParams;
+			}
+
+			if (this.aGetParams[sParamName] !== undefined)
+			{
+				sResult = this.aGetParams[sParamName];
+			}
+
+			return decodeURIComponent(sResult);
+		};
+		
+		$('body').ready(function () {
+			var
+				id = GetRequestParam('id'),
+				email = GetRequestParam('email'),
+				name = GetRequestParam('name'),
+				token = GetRequestParam('token'),
+				authToken = GetRequestParam('authToken')
+			;
+			
+			$('.userId').text(id);
+			$('.userEmail').text(email);
+			$('.userName').text(name);
+			$('.token').text(token);
+			$('.authToken').text(authToken);
+			
+			$.ajax({
+				url: 'http://192.168.0.57/p7/?/Ajax/',
+				type: 'POST',
+				async: true,
+				dataType: 'json',
+				data: {
+					'AccountID': id,
+					'Action': 'AccountSettingsGet',
+					'AuthToken': authToken
+				},
+				success: function (oData, sType, oXhr) {
+					var
+						oAccountInfo = oData.Result,
+						email = oAccountInfo.Email,
+						name = oAccountInfo.FriendlyName
+					;
+					
+					$('.userEmailViaAPI').text(email);
+					$('.userNameViaAPI').text(name);
+				},
+				timeout: 50000
+			});
+		});
+	</script>
+  </body>
+</html>
